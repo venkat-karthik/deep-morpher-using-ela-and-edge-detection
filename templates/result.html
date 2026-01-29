@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}ELA Results - {{ original_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-12">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h1 class="display-5 text-success">
+                <i class="fas fa-check-circle me-3"></i>Analysis Complete
+            </h1>
+            <p class="lead text-muted">
+                Error Level Analysis results for: <strong>{{ original_name }}</strong>
+            </p>
+            <small class="text-muted">Processed on: {{ timestamp }}</small>
+        </div>
+
+        <!-- Image Comparison -->
+        <div class="card shadow-lg border-0 mb-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-images me-2"></i>Original vs ELA Analysis
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <!-- Original Image -->
+                    <div class="col-md-6">
+                        <div class="text-center">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-image me-2"></i>Original Image
+                            </h5>
+                            <div class="border rounded p-2 bg-light">
+                                <img src="{{ url_for('static', filename=original_image) }}" 
+                                     alt="Original Image" 
+                                     class="img-fluid rounded shadow-sm"
+                                     style="max-width: 100%; height: auto; max-height: 400px;">
+                            </div>
+                            <p class="text-muted mt-2 small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Your uploaded image
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- ELA Result -->
+                    <div class="col-md-6">
+                        <div class="text-center">
+                            <h5 class="text-danger mb-3">
+                                <i class="fas fa-fire me-2"></i>ELA Heatmap
+                            </h5>
+                            <div class="border rounded p-2 bg-dark">
+                                <img src="{{ url_for('static', filename=result_image) }}" 
+                                     alt="ELA Result" 
+                                     class="img-fluid rounded shadow-sm"
+                                     style="max-width: 100%; height: auto; max-height: 400px;">
+                            </div>
+                            <p class="text-muted mt-2 small">
+                                <i class="fas fa-search-plus me-1"></i>
+                                Bright areas indicate potential tampering
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Interpretation -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-eye me-2"></i>Quick Interpretation Guide:
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-4 text-center">
+                                    <i class="fas fa-fire text-danger fa-2x mb-2"></i>
+                                    <p class="mb-0"><strong>Bright/Hot Areas</strong><br>
+                                    <small>Potential tampering or editing</small></p>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <i class="fas fa-moon text-success fa-2x mb-2"></i>
+                                    <p class="mb-0"><strong>Dark/Cool Areas</strong><br>
+                                    <small>Likely authentic content</small></p>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <i class="fas fa-balance-scale text-warning fa-2x mb-2"></i>
+                                    <p class="mb-0"><strong>Uniform Pattern</strong><br>
+                                    <small>Consistent throughout = authentic</small></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('download_file', folder='results', filename=result_image.split('/')[-1]) }}" 
+                           class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-download me-2"></i>Download ELA
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('download_file', folder='originals', filename=original_image.split('/')[-1]) }}" 
+                           class="btn btn-outline-primary btn-lg w-100">
+                            <i class="fas fa-image me-2"></i>Download Original
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('index') }}" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-upload me-2"></i>Analyze Another
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('about') }}" class="btn btn-outline-info btn-lg w-100">
+                            <i class="fas fa-question-circle me-2"></i>Learn More
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Analysis -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-microscope me-2"></i>Detailed Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">What ELA Reveals:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Compression inconsistencies</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Potential copy-paste regions</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Different compression histories</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Editing artifacts</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning">Technical Details:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Algorithm:</strong> Error Level Analysis (PS-7)</li>
+                            <li><strong>JPEG Quality:</strong> Fixed at 90%</li>
+                            <li><strong>Processing:</strong> Pixel-by-pixel difference</li>
+                            <li><strong>Enhancement:</strong> Brightness amplification</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Important Disclaimers -->
+        <div class="card border-warning mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Important Disclaimers
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-warning">Limitations:</h6>
+                        <ul class="small">
+                            <li>ELA is not 100% conclusive evidence</li>
+                            <li>False positives can occur with natural features</li>
+                            <li>Advanced editing may not be detected</li>
+                            <li>Results should be interpreted by experts</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-info">Best Practices:</h6>
+                        <ul class="small">
+                            <li>Use alongside other forensic methods</li>
+                            <li>Consider the source and context</li>
+                            <li>Compare with known authentic images</li>
+                            <li>Seek professional analysis for legal cases</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

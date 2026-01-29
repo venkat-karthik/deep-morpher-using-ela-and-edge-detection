@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}About ELA - Image Forgery Detection{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-primary">
+                <i class="fas fa-info-circle me-3"></i>About Error Level Analysis
+            </h1>
+            <p class="lead text-muted">
+                Understanding the science behind image forgery detection
+            </p>
+        </div>
+
+        <!-- What is ELA -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-question-circle me-2"></i>What is Error Level Analysis?
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Error Level Analysis (ELA) is a forensic technique used to identify portions of an image that have been modified or tampered with.
+                </p>
+                <p>
+                    The technique works by exploiting the fact that different parts of a manipulated image often have different compression histories. When an image is saved as a JPEG, it undergoes lossy compression. If parts of the image have been edited or copied from other sources, they will have different error levels when recompressed.
+                </p>
+            </div>
+        </div>
+
+        <!-- How it Works -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>How Does ELA Work?
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Step-by-Step Process:</h6>
+                        <ol>
+                            <li><strong>Load Original Image:</strong> The suspect image is loaded and converted to RGB format</li>
+                            <li><strong>JPEG Recompression:</strong> The image is saved as JPEG with exactly 90% quality</li>
+                            <li><strong>Reload Compressed:</strong> The recompressed image is loaded back into memory</li>
+                            <li><strong>Calculate Difference:</strong> Pixel-by-pixel differences are computed between original and recompressed versions</li>
+                            <li><strong>Amplify Brightness:</strong> The differences are enhanced and normalized for visibility</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">Key Principles:</h6>
+                        <ul>
+                            <li><strong>Compression Artifacts:</strong> Different compression histories create detectable patterns</li>
+                            <li><strong>Error Levels:</strong> Tampered regions show higher error levels than authentic areas</li>
+                            <li><strong>Visual Enhancement:</strong> Brightness amplification makes subtle differences visible</li>
+                            <li><strong>Forensic Evidence:</strong> Provides visual evidence of potential manipulation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PS-7 Compliance -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="fas fa-certificate me-2"></i>PS-7 Compliance
+                </h4>
+            </div>
+            <div class="card-body">
+                <p>
+                    This implementation strictly follows the <strong>Problem Statement 7 (PS-7)</strong> requirements for Error Level Analysis:
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-warning">Technical Specifications:</h6>
+                        <ul>
+                            <li>Fixed JPEG quality at <strong>90%</strong> (mandatory)</li>
+                            <li>Absolute difference calculation using ImageChops</li>
+                            <li>Brightness amplification with proper normalization</li>
+                            <li>RGB color space processing</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning">Quality Assurance:</h6>
+                        <ul>
+                            <li>Consistent algorithm implementation</li>
+                            <li>Proper temporary file handling</li>
+                            <li>Error handling and validation</li>
+                            <li>Standardized output format</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interpretation Guide -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-eye me-2"></i>Interpreting ELA Results
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded bg-light">
+                            <i class="fas fa-fire text-danger fa-3x mb-2"></i>
+                            <h6 class="text-danger">Bright/Hot Areas</h6>
+                            <p class="small">High error levels indicate potential tampering or editing</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded bg-light">
+                            <i class="fas fa-moon text-success fa-3x mb-2"></i>
+                            <h6 class="text-success">Dark/Cool Areas</h6>
+                            <p class="small">Low error levels suggest authentic, unmodified content</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded bg-light">
+                            <i class="fas fa-balance-scale text-warning fa-3x mb-2"></i>
+                            <h6 class="text-warning">Uniform Patterns</h6>
+                            <p class="small">Consistent error levels across the image indicate authenticity</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Limitations -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Limitations & Considerations
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">Important Disclaimers:</h6>
+                    <ul class="mb-0">
+                        <li><strong>Not 100% Accurate:</strong> ELA is a forensic tool, not a definitive proof of tampering</li>
+                        <li><strong>False Positives:</strong> Natural image features can sometimes appear as bright areas</li>
+                        <li><strong>Skilled Manipulation:</strong> Advanced editing techniques may not be detected</li>
+                        <li><strong>Context Required:</strong> Results should be interpreted by forensic experts</li>
+                        <li><strong>Complementary Tool:</strong> Best used alongside other forensic analysis methods</li>
+                    </ul>
+                </div>
+                
+                <h6 class="text-danger mt-3">When ELA May Not Work:</h6>
+                <ul>
+                    <li>Images that have been heavily processed or filtered</li>
+                    <li>Very low quality or highly compressed source images</li>
+                    <li>Images with uniform textures or solid colors</li>
+                    <li>Professional manipulations designed to avoid detection</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Use Cases -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Common Use Cases
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-secondary">Professional Applications:</h6>
+                        <ul>
+                            <li>Digital forensics investigations</li>
+                            <li>Insurance fraud detection</li>
+                            <li>Legal evidence analysis</li>
+                            <li>Journalism verification</li>
+                            <li>Academic research</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-secondary">Personal Use:</h6>
+                        <ul>
+                            <li>Social media verification</li>
+                            <li>Online marketplace authenticity</li>
+                            <li>Educational purposes</li>
+                            <li>Curiosity about image authenticity</li>
+                            <li>Learning digital forensics</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

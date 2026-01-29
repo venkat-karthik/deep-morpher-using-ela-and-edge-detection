@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-primary">
+                <i class="fas fa-image me-3"></i>Image Forgery Detection
+            </h1>
+            <p class="lead text-muted">
+                Upload an image to analyze for potential tampering using Error Level Analysis (ELA)
+            </p>
+        </div>
+
+        <!-- Upload Card -->
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>Upload Image for Analysis
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-4">
+                        <label for="file" class="form-label fw-bold">Select Image File:</label>
+                        <input type="file" class="form-control form-control-lg" id="file" name="file" 
+                               accept=".png,.jpg,.jpeg,.gif,.bmp,.tiff,.webp" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Supported formats: PNG, JPG, JPEG, GIF, BMP, TIFF, WebP (Max: 16MB)
+                        </div>
+                    </div>
+
+                    <!-- Preview Area -->
+                    <div id="imagePreview" class="mb-4" style="display: none;">
+                        <label class="form-label fw-bold">Preview:</label>
+                        <div class="border rounded p-3 text-center bg-light">
+                            <img id="previewImg" src="" alt="Preview" class="img-fluid rounded" style="max-height: 300px;">
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="fas fa-search-plus me-2"></i>Analyze Image
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- How it Works -->
+        <div class="card mt-4 border-0">
+            <div class="card-body">
+                <h5 class="card-title text-primary">
+                    <i class="fas fa-cogs me-2"></i>How Error Level Analysis Works:
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ol class="list-group list-group-numbered list-group-flush">
+                            <li class="list-group-item border-0 px-0">
+                                <strong>Load Original:</strong> Your image is loaded and converted to RGB
+                            </li>
+                            <li class="list-group-item border-0 px-0">
+                                <strong>JPEG Recompression:</strong> Image is saved at exactly 90% quality
+                            </li>
+                            <li class="list-group-item border-0 px-0">
+                                <strong>Calculate Difference:</strong> Pixel-by-pixel comparison is performed
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <ol class="list-group list-group-numbered list-group-flush" start="4">
+                            <li class="list-group-item border-0 px-0">
+                                <strong>Amplify Brightness:</strong> Differences are enhanced for visibility
+                            </li>
+                            <li class="list-group-item border-0 px-0">
+                                <strong>Generate Heatmap:</strong> Bright areas indicate potential tampering
+                            </li>
+                        </ol>
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Tip:</strong> Brighter/hotter regions in the result indicate higher compression inconsistency and potential tampering.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Processing Image...</h5>
+                <p class="text-muted mb-0">Performing Error Level Analysis</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
