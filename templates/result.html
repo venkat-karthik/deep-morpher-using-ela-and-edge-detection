@@ -3,27 +3,82 @@
 {% block title %}ELA Results - {{ original_name }}{% endblock %}
 
 {% block content %}
+<style>
+/* Custom Styles for Forensic Report */
+.image-container {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+.anomaly-highlight {
+    position: absolute;
+    border: 3px dashed #ff0055;
+    background-color: rgba(255, 0, 85, 0.15);
+    box-sizing: border-box;
+    display: none;
+    pointer-events: none;
+    animation: pulse 1.5s infinite;
+    z-index: 10;
+}
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.5);
+        border-color: #ff0055;
+    }
+    50% {
+        border-color: #ffaa00;
+    }
+    100% {
+        box-shadow: 0 0 0 10px rgba(255, 0, 85, 0);
+        border-color: #ff0055;
+    }
+}
+.show-highlight .anomaly-highlight {
+    display: block;
+}
+.gauge-svg {
+    width: 130px;
+    height: 130px;
+    margin: 0 auto;
+    display: block;
+}
+.gauge-fill {
+    transition: stroke-dashoffset 1.5s ease-out;
+}
+.metrics-table th {
+    font-weight: 600;
+    color: #555;
+}
+.metrics-table td {
+    font-weight: 500;
+}
+</style>
+
 <div class="row justify-content-center">
     <div class="col-lg-12">
         <!-- Header -->
         <div class="text-center mb-4">
-            <h1 class="display-5 text-success">
-                <i class="fas fa-check-circle me-3"></i>Analysis Complete
+            <h1 class="display-5 {% if report.tamper_score < 15 %}text-success{% elif report.tamper_score < 45 %}text-warning{% else %}text-danger{% endif %}">
+                <i class="fas {% if report.tamper_score < 15 %}fa-check-circle{% elif report.tamper_score < 45 %}fa-exclamation-triangle{% else %}fa-radiation-alt{% endif %} me-3"></i>Analysis Complete
             </h1>
             <p class="lead text-muted">
                 Error Level Analysis results for: <strong>{{ original_name }}</strong>
             </p>
             <small class="text-muted">Processed on: {{ timestamp }}</small>
         </div>
+    </div>
+</div>
 
-        <!-- Image Comparison -->
+<div class="row">
+    <!-- Left Column: Image Comparison (Takes 8 columns) -->
+    <div class="col-lg-8">
         <div class="card shadow-lg border-0 mb-4">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">
+            <div class="card-header {% if report.tamper_score < 15 %}bg-success{% elif report.tamper_score < 45 %}bg-warning text-dark{% else %}bg-danger{% endif %} text-white">
+                <h4 class="mb-0 text-white">
                     <i class="fas fa-images me-2"></i>Original vs ELA Analysis
                 </h4>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-4 text-center">
                 <div class="row g-4">
                     <!-- Original Image -->
                     <div class="col-md-6">
@@ -31,11 +86,16 @@
                             <h5 class="text-primary mb-3">
                                 <i class="fas fa-image me-2"></i>Original Image
                             </h5>
-                            <div class="border rounded p-2 bg-light">
-                                <img src="{{ original_image }}" 
-                                     alt="Original Image" 
-                                     class="img-fluid rounded shadow-sm"
-                                     style="max-width: 100%; height: auto; max-height: 400px;">
+                            <div class="border rounded p-2 bg-light d-inline-block">
+                                <div class="image-container" id="originalContainer">
+                                    <img src="{{ original_image }}" 
+                                         alt="Original Image" 
+                                         class="img-fluid rounded shadow-sm"
+                                         style="max-width: 100%; height: auto; max-height: 400px;">
+                                    {% if report.anomaly_box %}
+                                    <div class="anomaly-highlight" style="left: {{ report.anomaly_box.x * 100 }}%; top: {{ report.anomaly_box.y * 100 }}%; width: {{ report.anomaly_box.w * 100 }}%; height: {{ report.anomaly_box.h * 100 }}%;"></div>
+                                    {% endif %}
+                                </div>
                             </div>
                             <p class="text-muted mt-2 small">
                                 <i class="fas fa-info-circle me-1"></i>
@@ -50,11 +110,16 @@
                             <h5 class="text-danger mb-3">
                                 <i class="fas fa-fire me-2"></i>ELA Heatmap
                             </h5>
-                            <div class="border rounded p-2 bg-dark">
-                                <img src="{{ result_image }}" 
-                                     alt="ELA Result" 
-                                     class="img-fluid rounded shadow-sm"
-                                     style="max-width: 100%; height: auto; max-height: 400px;">
+                            <div class="border rounded p-2 bg-dark d-inline-block">
+                                <div class="image-container" id="elaContainer">
+                                    <img src="{{ result_image }}" 
+                                         alt="ELA Result" 
+                                         class="img-fluid rounded shadow-sm"
+                                         style="max-width: 100%; height: auto; max-height: 400px;">
+                                    {% if report.anomaly_box %}
+                                    <div class="anomaly-highlight" style="left: {{ report.anomaly_box.x * 100 }}%; top: {{ report.anomaly_box.y * 100 }}%; width: {{ report.anomaly_box.w * 100 }}%; height: {{ report.anomaly_box.h * 100 }}%;"></div>
+                                    {% endif %}
+                                </div>
                             </div>
                             <p class="text-muted mt-2 small">
                                 <i class="fas fa-search-plus me-1"></i>
@@ -64,32 +129,20 @@
                     </div>
                 </div>
 
-                <!-- Quick Interpretation -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            <h6 class="alert-heading">
-                                <i class="fas fa-eye me-2"></i>Quick Interpretation Guide:
-                            </h6>
-                            <div class="row">
-                                <div class="col-md-4 text-center">
-                                    <i class="fas fa-fire text-danger fa-2x mb-2"></i>
-                                    <p class="mb-0"><strong>Bright/Hot Areas</strong><br>
-                                    <small>Potential tampering or editing</small></p>
-                                </div>
-                                <div class="col-md-4 text-center">
-                                    <i class="fas fa-moon text-success fa-2x mb-2"></i>
-                                    <p class="mb-0"><strong>Dark/Cool Areas</strong><br>
-                                    <small>Likely authentic content</small></p>
-                                </div>
-                                <div class="col-md-4 text-center">
-                                    <i class="fas fa-balance-scale text-warning fa-2x mb-2"></i>
-                                    <p class="mb-0"><strong>Uniform Pattern</strong><br>
-                                    <small>Consistent throughout = authentic</small></p>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Anomaly Toggle -->
+                <div class="mt-4">
+                    {% if report.anomaly_box %}
+                    <div class="form-check form-switch d-inline-block bg-light border p-2 px-4 rounded shadow-sm">
+                        <input class="form-check-input ms-0 me-2" type="checkbox" id="toggleHighlight" style="cursor: pointer;">
+                        <label class="form-check-label fw-bold text-danger" for="toggleHighlight" style="cursor: pointer;">
+                            <i class="fas fa-crosshairs me-1"></i> Highlight Splicing / Anomaly Region
+                        </label>
                     </div>
+                    {% else %}
+                    <div class="alert alert-success d-inline-block mb-0 text-start py-2 px-3">
+                        <i class="fas fa-shield-alt me-2"></i> <strong>No localized anomalies detected:</strong> The compression rate error standard deviation is uniform.
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -123,68 +176,159 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Detailed Analysis -->
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-microscope me-2"></i>Detailed Analysis
+    <!-- Right Column: Forensic Report Dashboard (Takes 4 columns) -->
+    <div class="col-lg-4">
+        <!-- Threat Gauge Card -->
+        <div class="card shadow-lg border-0 mb-4 text-center">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-tachometer-alt me-2"></i>Tamper Threat Score
                 </h5>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-primary">What ELA Reveals:</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success me-2"></i>Compression inconsistencies</li>
-                            <li><i class="fas fa-check text-success me-2"></i>Potential copy-paste regions</li>
-                            <li><i class="fas fa-check text-success me-2"></i>Different compression histories</li>
-                            <li><i class="fas fa-check text-success me-2"></i>Editing artifacts</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Technical Details:</h6>
-                        <ul class="list-unstyled">
-                            <li><strong>Algorithm:</strong> Error Level Analysis (PS-7)</li>
-                            <li><strong>JPEG Quality:</strong> Fixed at 90%</li>
-                            <li><strong>Processing:</strong> Pixel-by-pixel difference</li>
-                            <li><strong>Enhancement:</strong> Brightness amplification</li>
-                        </ul>
-                    </div>
+            <div class="card-body py-4">
+                {% set theme_color = '#28a745' if report.tamper_score < 15 else '#ffc107' if report.tamper_score < 45 else '#dc3545' %}
+                {% set risk_label = 'LOW RISK' if report.tamper_score < 15 else 'MODERATE RISK' if report.tamper_score < 45 else 'HIGH RISK' %}
+                
+                <div class="position-relative d-inline-block">
+                    <svg viewBox="0 0 100 100" class="gauge-svg">
+                      <circle cx="50" cy="50" r="42" stroke="#e9ecef" stroke-width="6" fill="transparent"></circle>
+                      <circle class="gauge-fill" cx="50" cy="50" r="42" 
+                              stroke="{{ theme_color }}" 
+                              stroke-width="7" fill="transparent"
+                              stroke-dasharray="263.89"
+                              stroke-dashoffset="{{ 263.89 - (263.89 * report.tamper_score / 100.0) }}"
+                              stroke-linecap="round"
+                              transform="rotate(-90 50 50)"></circle>
+                      <text x="50" y="55" text-anchor="middle" font-weight="bold" font-size="18" fill="#212529">{{ report.tamper_score }}%</text>
+                    </svg>
                 </div>
+                
+                <h4 class="mt-3 font-weight-bold" style="color: {{ theme_color }};">{{ risk_label }}</h4>
+                <p class="text-muted small px-3">
+                    Calculated by analyzing high-contrast localized compression error distributions across the ELA dataset.
+                </p>
             </div>
         </div>
 
-        <!-- Important Disclaimers -->
-        <div class="card border-warning mb-4">
-            <div class="card-header bg-warning text-dark">
-                <h6 class="mb-0">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Important Disclaimers
-                </h6>
+        <!-- Metrics Card -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-chart-pie me-2"></i>Forensic Metrics
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover metrics-table mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="ps-3"><i class="fas fa-compress-alt text-primary me-2"></i>Mean Error</td>
+                            <td class="text-end pe-3">{{ report.mean_diff }}</td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3"><i class="fas fa-wave-square text-info me-2"></i>Error Variance (SD)</td>
+                            <td class="text-end pe-3">{{ report.std_dev }}</td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3"><i class="fas fa-exclamation-circle text-danger me-2"></i>Suspicious Pixel %</td>
+                            <td class="text-end pe-3">{{ report.suspicious_ratio }}%</td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3"><i class="fas fa-map-marker-alt text-warning me-2"></i>Anomaly Overlay</td>
+                            <td class="text-end pe-3">{{ 'Detected' if report.anomaly_box else 'None' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Histogram Card -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-chart-bar me-2"></i>Compression Error Chart
+                </h5>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-warning">Limitations:</h6>
-                        <ul class="small">
-                            <li>ELA is not 100% conclusive evidence</li>
-                            <li>False positives can occur with natural features</li>
-                            <li>Advanced editing may not be detected</li>
-                            <li>Results should be interpreted by experts</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-info">Best Practices:</h6>
-                        <ul class="small">
-                            <li>Use alongside other forensic methods</li>
-                            <li>Consider the source and context</li>
-                            <li>Compare with known authentic images</li>
-                            <li>Seek professional analysis for legal cases</li>
-                        </ul>
+                <p class="text-muted small">Distribution of ELA error intensity levels (0 to 50):</p>
+                <div class="histogram-chart mt-3">
+                    <svg viewBox="0 0 150 50" style="width: 100%; height: 90px;" preserveAspectRatio="none">
+                        {% set chart_fill = 'rgba(40, 167, 69, 0.65)' if report.tamper_score < 15 else 'rgba(255, 193, 7, 0.65)' if report.tamper_score < 45 else 'rgba(220, 53, 69, 0.65)' %}
+                        <g fill="{{ chart_fill }}">
+                            {% set max_val = report.histogram | max or 1 %}
+                            {% for val in report.histogram %}
+                                {% set bar_height = (val / max_val) * 45 %}
+                                {% set x_pos = loop.index0 * 3 %}
+                                <rect x="{{ x_pos }}" y="{{ 50 - bar_height }}" width="2.3" height="{{ bar_height }}" rx="0.4"></rect>
+                            {% endfor %}
+                        </g>
+                        <line x1="0" y1="49" x2="150" y2="49" stroke="#dee2e6" stroke-width="0.5"></line>
+                    </svg>
+                    <div class="d-flex justify-content-between text-muted small mt-1" style="font-size: 0.75rem;">
+                        <span>0 (Low Error)</span>
+                        <span>50 (High Error)</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="row">
+    <div class="col-12">
+        <!-- Forensic Findings Analysis -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-file-medical-alt me-2"></i>Forensic Analysis Report
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary fw-bold"><i class="fas fa-clipboard-list me-2"></i>Analysis Summary:</h6>
+                        <p class="text-secondary">
+                            {% if report.tamper_score < 15 %}
+                            The error level distribution is highly consistent and uniform throughout the image. Standard deviation is extremely low ({{ report.std_dev }}), indicating that the entire image has a shared compression history. No splicing, brush stroke tampering, or foreign object insertions were found.
+                            {% elif report.tamper_score < 45 %}
+                            Mild compression noise or variations detected. The mean error is {{ report.mean_diff }} with a variance score of {{ report.std_dev }}. While the overall risk remains moderate, there are minor local deviations, possibly due to normal JPEG quality scaling, high-frequency natural textures, or global brightness adjustments.
+                            {% else %}
+                            <strong>Critical anomalies identified:</strong> There is a significant, high-contrast compression mismatch in the ELA dataset (Tamper Threat: {{ report.tamper_score }}%). Over {{ report.suspicious_ratio }}% of the pixels contain error intensities indicating a separate compression history. Localized grid checks detected a highly suspicious splicing region. This is typical of cut-and-paste edits, digital manipulation, or image overlays.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6 border-start">
+                        <h6 class="text-warning fw-bold"><i class="fas fa-microscope me-2"></i>Digital Forensic Indicators:</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <ul class="list-unstyled small">
+                                    <li><strong>Algorithm:</strong> ELA (PS-7)</li>
+                                    <li><strong>JPEG Base:</strong> 90% Quality</li>
+                                    <li><strong>Anomalies:</strong> {{ 'Yes (Localized)' if report.anomaly_box else 'None' }}</li>
+                                </ul>
+                            </div>
+                            <div class="col-6">
+                                <ul class="list-unstyled small">
+                                    <li><strong>Sample Pixels:</strong> {{ report.suspicious_ratio }}% high diff</li>
+                                    <li><strong>Diff Range:</strong> Mean = {{ report.mean_diff }}</li>
+                                    <li><strong>Consistency:</strong> {{ 'Uniform' if report.tamper_score < 15 else 'Uneven / Edited' }}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Anomaly highlight toggle controller
+document.getElementById('toggleHighlight')?.addEventListener('change', function(e) {
+    const active = e.target.checked;
+    document.getElementById('originalContainer').classList.toggle('show-highlight', active);
+    document.getElementById('elaContainer').classList.toggle('show-highlight', active);
+});
+</script>
 {% endblock %}

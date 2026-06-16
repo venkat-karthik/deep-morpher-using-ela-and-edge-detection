@@ -29,6 +29,72 @@ def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def analyze_ela_statistics(ela_image):
+    """
+    Perform statistical analysis on the un-amplified ELA image.
+    Returns mean, std_dev, tamper_score, and bounding box of the hottest region.
+    """
+    gray_ela = ela_image.convert("L")
+    width, height = gray_ela.size
+    total_pixels = width * height
+    
+    # Calculate global statistics using histogram
+    hist = gray_ela.histogram()
+    mean_diff = sum(i * hist[i] for i in range(256)) / total_pixels
+    variance = sum(hist[i] * ((i - mean_diff) ** 2) for i in range(256)) / total_pixels
+    std_dev = variance ** 0.5
+    
+    # Suspicious pixels (difference > 12)
+    suspicious_count = sum(hist[12:])
+    suspicious_ratio = (suspicious_count / total_pixels) * 100
+    
+    # Calibrate a robust tamper score (0-100)
+    # Natural images typically have low mean (<3) and low std_dev (<4)
+    raw_score = (mean_diff * 8.0) + (std_dev * 4.0) + (suspicious_ratio * 1.5)
+    tamper_score = min(100.0, max(0.0, raw_score))
+    
+    # Grid-based localized anomaly detection (8x8 grid)
+    cell_w = width / 8.0
+    cell_h = height / 8.0
+    cells_data = []
+    
+    for row in range(8):
+        for col in range(8):
+            box = (int(col * cell_w), int(row * cell_h), int((col + 1) * cell_w), int((row + 1) * cell_h))
+            cell_crop = gray_ela.crop(box)
+            cell_hist = cell_crop.histogram()
+            cell_total = sum(cell_hist) or 1
+            cell_mean = sum(i * cell_hist[i] for i in range(256)) / cell_total
+            cells_data.append(((row, col), cell_mean, box))
+            
+    # Find the cell with the highest ELA mean
+    hottest_cell = max(cells_data, key=lambda x: x[1])
+    hottest_coords = hottest_cell[0]
+    hottest_mean = hottest_cell[1]
+    hottest_box = hottest_cell[2]
+    
+    # Check if this cell is an anomaly (significantly brighter than the average cell)
+    avg_cell_mean = sum(x[1] for x in cells_data) / 64.0
+    is_anomaly = hottest_mean > (avg_cell_mean * 1.5) and hottest_mean > 5.0
+    
+    normalized_box = None
+    if is_anomaly:
+        normalized_box = {
+            "x": hottest_box[0] / width,
+            "y": hottest_box[1] / height,
+            "w": (hottest_box[2] - hottest_box[0]) / width,
+            "h": (hottest_box[3] - hottest_box[1]) / height
+        }
+        
+    return {
+        "mean_diff": round(mean_diff, 2),
+        "std_dev": round(std_dev, 2),
+        "suspicious_ratio": round(suspicious_ratio, 2),
+        "tamper_score": round(tamper_score, 1),
+        "anomaly_box": normalized_box,
+        "histogram": hist[:50]  # Only need first 50 values for chart
+    }
+
 def convert_to_ela_image_ps7(image_path):
     """PS-7 Compliant Error Level Analysis (ELA)"""
     try:
@@ -54,9 +120,9 @@ def convert_to_ela_image_ps7(image_path):
             extrema = ela_image.getextrema()
             max_diff = max(ex[1] for ex in extrema) or 1
             scale = 255.0 / max_diff
-            ela_image = ImageEnhance.Brightness(ela_image).enhance(scale)
+            ela_image_amplified = ImageEnhance.Brightness(ela_image).enhance(scale)
             
-            return ela_image
+            return ela_image, ela_image_amplified
             
         finally:
             # Clean up temp file
@@ -123,11 +189,14 @@ def upload_file():
             original_data_url = f"data:image/jpeg;base64,{original_base64}"
         
         # Process with ELA
-        ela_result = convert_to_ela_image_ps7(temp_filepath)
+        ela_diff, ela_amplified = convert_to_ela_image_ps7(temp_filepath)
+        
+        # Analyze ELA statistics
+        report = analyze_ela_statistics(ela_diff)
         
         # Convert ELA result to JPEG in memory and get base64
         ela_io = io.BytesIO()
-        ela_result.save(ela_io, 'JPEG', quality=95)
+        ela_amplified.save(ela_io, 'JPEG', quality=95)
         ela_io.seek(0)
         ela_base64 = base64.b64encode(ela_io.getvalue()).decode('utf-8')
         ela_data_url = f"data:image/jpeg;base64,{ela_base64}"
@@ -135,11 +204,12 @@ def upload_file():
         # Clean up uploaded file
         os.remove(temp_filepath)
         
-        # Render page with base64 data URLs
+        # Render page with base64 data URLs and report
         return render_template('result.html', 
                              original_name=original_filename,
                              original_image=original_data_url,
                              result_image=ela_data_url,
+                             report=report,
                              timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         
     except Exception as e:
