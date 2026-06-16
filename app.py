@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, send_file, flash, redirect, url_for
 import os
 import tempfile
+import io
+import base64
 from werkzeug.utils import secure_filename
 from PIL import Image, ImageChops, ImageEnhance
 import uuid
@@ -111,42 +113,40 @@ def upload_file():
         temp_filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(temp_filepath)
         
-        # Save original image for display
-        original_display_name = f"original_{filename}"
-        original_display_path = os.path.join(ORIGINALS_FOLDER, original_display_name)
-        
-        # Convert and save original as JPG for consistent display
+        # Convert original to JPEG in memory and get base64
         with Image.open(temp_filepath) as img:
             img = img.convert('RGB')
-            img.save(original_display_path, 'JPEG', quality=95)
+            img_io = io.BytesIO()
+            img.save(img_io, 'JPEG', quality=95)
+            img_io.seek(0)
+            original_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
+            original_data_url = f"data:image/jpeg;base64,{original_base64}"
         
         # Process with ELA
         ela_result = convert_to_ela_image_ps7(temp_filepath)
         
-        # Save ELA result
-        result_filename = f"ela_{base_name}_{unique_id}.jpg"
-        result_path = os.path.join(RESULTS_FOLDER, result_filename)
-        ela_result.save(result_path, "JPEG", quality=95)
+        # Convert ELA result to JPEG in memory and get base64
+        ela_io = io.BytesIO()
+        ela_result.save(ela_io, 'JPEG', quality=95)
+        ela_io.seek(0)
+        ela_base64 = base64.b64encode(ela_io.getvalue()).decode('utf-8')
+        ela_data_url = f"data:image/jpeg;base64,{ela_base64}"
         
         # Clean up uploaded file
         os.remove(temp_filepath)
         
-        # Redirect to results page with both images
+        # Render page with base64 data URLs
         return render_template('result.html', 
                              original_name=original_filename,
-                             original_image=f"originals/{original_display_name}",
-                             result_image=f"results/{result_filename}",
+                             original_image=original_data_url,
+                             result_image=ela_data_url,
                              timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         
     except Exception as e:
-        # Clean up files if error occurs
+        # Clean up uploaded file if error occurs
         try:
             if 'temp_filepath' in locals() and os.path.exists(temp_filepath):
                 os.remove(temp_filepath)
-            if 'original_display_path' in locals() and os.path.exists(original_display_path):
-                os.remove(original_display_path)
-            if 'result_path' in locals() and os.path.exists(result_path):
-                os.remove(result_path)
         except:
             pass
             

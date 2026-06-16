@@ -32,7 +32,7 @@
                                 <i class="fas fa-image me-2"></i>Original Image
                             </h5>
                             <div class="border rounded p-2 bg-light">
-                                <img src="{{ url_for('static', filename=original_image) }}" 
+                                <img src="{{ original_image }}" 
                                      alt="Original Image" 
                                      class="img-fluid rounded shadow-sm"
                                      style="max-width: 100%; height: auto; max-height: 400px;">
@@ -51,7 +51,7 @@
                                 <i class="fas fa-fire me-2"></i>ELA Heatmap
                             </h5>
                             <div class="border rounded p-2 bg-dark">
-                                <img src="{{ url_for('static', filename=result_image) }}" 
+                                <img src="{{ result_image }}" 
                                      alt="ELA Result" 
                                      class="img-fluid rounded shadow-sm"
                                      style="max-width: 100%; height: auto; max-height: 400px;">
@@ -99,13 +99,13 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <a href="{{ url_for('download_file', folder='results', filename=result_image.split('/')[-1]) }}" 
+                        <a href="{{ result_image }}" download="ela_{{ original_name }}" 
                            class="btn btn-primary btn-lg w-100">
                             <i class="fas fa-download me-2"></i>Download ELA
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="{{ url_for('download_file', folder='originals', filename=original_image.split('/')[-1]) }}" 
+                        <a href="{{ original_image }}" download="original_{{ original_name }}" 
                            class="btn btn-outline-primary btn-lg w-100">
                             <i class="fas fa-image me-2"></i>Download Original
                         </a>
