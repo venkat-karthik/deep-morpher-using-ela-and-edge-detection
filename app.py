@@ -11,17 +11,17 @@ app = Flask(__name__)
 app.secret_key = 'ela_forgery_detection_secret_key_2024'
 
 # Configuration
-UPLOAD_FOLDER = 'uploads'
-RESULTS_FOLDER = 'static/results'
-ORIGINALS_FOLDER = 'static/originals'
+TEMP_DIR = tempfile.gettempdir()
+UPLOAD_FOLDER = os.path.join(TEMP_DIR, 'uploads')
+RESULTS_FOLDER = os.path.join(TEMP_DIR, 'static', 'results')
+ORIGINALS_FOLDER = os.path.join(TEMP_DIR, 'static', 'originals')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'}
 MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB max file size
 
-# Create directories if they don't exist
+# Create directories if they don't exist in writable TEMP_DIR
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 os.makedirs(ORIGINALS_FOLDER, exist_ok=True)
-os.makedirs('static', exist_ok=True)
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
@@ -157,6 +157,16 @@ def upload_file():
 def about():
     """About page explaining ELA"""
     return render_template('about.html')
+
+@app.route('/static/results/<filename>')
+def serve_result_file(filename):
+    """Serve ELA results from the temporary directory"""
+    return send_file(os.path.join(RESULTS_FOLDER, filename))
+
+@app.route('/static/originals/<filename>')
+def serve_original_file(filename):
+    """Serve original uploaded images from the temporary directory"""
+    return send_file(os.path.join(ORIGINALS_FOLDER, filename))
 
 @app.route('/download/<path:folder>/<filename>')
 def download_file(folder, filename):
